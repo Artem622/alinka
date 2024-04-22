@@ -1,5 +1,5 @@
+import 'package:alinka/pages/ComingSoonPage.dart';
 import 'package:alinka/pages/FirstSitePage.dart';
-import 'package:alinka/pages/SecondSitePage.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -55,7 +55,7 @@ class MyApp extends StatelessWidget {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => const SecondSitePage()));
+                              builder: (context) => const ComingSoonPage()));
                     },
                     child: const Text("Second site"))
               ],

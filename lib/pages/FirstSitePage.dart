@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:alinka/utils/constants.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -9,7 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import '../utils/APIProvider.dart';
 
 class FirstSitePage extends StatefulWidget {
-  const FirstSitePage({super.key});
+  const FirstSitePage({Key? key}) : super(key: key);
 
   @override
   State<FirstSitePage> createState() => _FirstSitePageState();
@@ -22,6 +24,14 @@ class _FirstSitePageState extends State<FirstSitePage> {
   bool isStarted = false;
   bool isOpened = false;
 
+  void _handleDragUpdate(DragUpdateDetails details) async {
+    if (details.delta.dy > 5) {
+      if (await webViewController.canGoBack()) {
+        webViewController.goBack();
+      }
+    }
+  }
+
   final initialSettings = InAppWebViewSettings(
     mediaPlaybackRequiresUserGesture: false,
     allowsInlineMediaPlayback: true,
@@ -29,17 +39,14 @@ class _FirstSitePageState extends State<FirstSitePage> {
     iframeAllow: "camera; microphone",
     isInspectable: false,
     useOnDownloadStart: true,
-      useOnLoadResource:true,
-  javaScriptCanOpenWindowsAutomatically:true,
-  userAgent:
-  "Mozilla/5.0 (Linux; Android 9; LG-H870 Build/PKQ1.190522.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/83.0.4103.106 Mobile Safari/537.36",
-  transparentBackground:true,
-  disableDefaultErrorPage:true,
-      verticalScrollbarThumbColor:
-      const Color.fromRGBO(0, 0, 0, 0.5),
-  horizontalScrollbarThumbColor:
-  const Color.fromRGBO(0, 0, 0, 0.5),
-
+    useOnLoadResource: true,
+    javaScriptCanOpenWindowsAutomatically: true,
+    userAgent:
+    "Mozilla/5.0 (Linux; Android 9; LG-H870 Build/PKQ1.190522.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/83.0.4103.106 Mobile Safari/537.36",
+    transparentBackground: true,
+    disableDefaultErrorPage: true,
+    verticalScrollbarThumbColor: const Color.fromRGBO(0, 0, 0, 0.5),
+    horizontalScrollbarThumbColor: const Color.fromRGBO(0, 0, 0, 0.5),
   );
 
   void _onItemTapped(int index) {
@@ -47,109 +54,118 @@ class _FirstSitePageState extends State<FirstSitePage> {
       _selectedIndex = index;
     });
 
-    if(index == 0) {
+    if (index == 0) {
       setState(() {
         isStarted = !isStarted;
       });
-      if(isStarted) {
+      if (isStarted) {
         // когда нужно стопнуть
-        webViewController.evaluateJavascript(source: 'alert("Stop")');
+        webViewController.evaluateJavascript(source: "document.getElementById('STOP-ALL-BTN').click()");
       } else {
         // когда нужно стартнуть
-        webViewController.evaluateJavascript(source: 'alert("Start")');
+        webViewController.evaluateJavascript(source: "document.getElementById('STOP-ALL-BTN').click()");
       }
-    } else if(index == 1) {
+    } else if (index == 1) {
       // рефреш
-      webViewController.evaluateJavascript(source: 'alert("Refresh")');
-    } else if(index == 2) {
+      webViewController.evaluateJavascript(source: "document.getElementById('REFRESH-BTN').click()");
+    } else if (index == 2) {
       setState(() {
         isOpened = !isOpened;
       });
-      if(isOpened) {
+      if (isOpened) {
         // когда нужно закрыть
-        webViewController.evaluateJavascript(source: 'alert("Close")');
+        webViewController.evaluateJavascript(source: "document.getElementById('SHOW-PREVIEW-MODAL').click()");
       } else {
         // когда нужно открыть
-        webViewController.evaluateJavascript(source: 'alert("Open")');
+        webViewController.evaluateJavascript(source: "document.getElementById('SHOW-PREVIEW-MODAL').click()");
       }
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        if (await webViewController.canGoBack()) {
+          webViewController.goBack();
+          return false; // Предотвращаем закрытие приложения
+        } else {
+          return true; // Разрешаем закрытие приложения
+        }
+      },
+      child: Scaffold(
         appBar: AppBar(
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
           title: const Text("Alinka"),
         ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Text(!isStarted ? "Stop" : "Start"),
-            label: 'Start/Stop',
-          ),
-          const BottomNavigationBarItem(
-            icon: Text("Refresh"),
-            label: 'Refresh',
-          ),
-          BottomNavigationBarItem(
-            icon: Text(!isOpened ? "Close" : "Open"),
-            label: 'Open/Close',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-      ),
-      body: InAppWebView(
-
+        bottomNavigationBar: BottomNavigationBar(
+          items: <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Text(!isStarted ? "Stop" : "Start"),
+              label: 'Start/Stop',
+            ),
+            const BottomNavigationBarItem(
+              icon: Text("Refresh"),
+              label: 'Refresh',
+            ),
+            BottomNavigationBarItem(
+              icon: Text(!isOpened ? "Close" : "Open"),
+              label: 'Open/Close',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+        ),
+        body: InAppWebView(
           key: webViewKey,
           initialUrlRequest: URLRequest(url: WebUri(firstUrl)),
           initialSettings: initialSettings,
-
-        onPermissionRequest: (controller, permissionRequest) async {
-          return PermissionResponse(
-              resources: permissionRequest.resources,
-              action: PermissionResponseAction.GRANT);
-        },
-
-        onWebViewCreated: (controller) async {
-          webViewController = controller;
-        },
-
-        onLoadStop: (controller, url) {
+          onPermissionRequest: (controller, permissionRequest) async {
+            return PermissionResponse(
+                resources: permissionRequest.resources,
+                action: PermissionResponseAction.GRANT);
+          },
+          onWebViewCreated: (controller) async {
+            webViewController = controller;
+          },
+          onLoadStop: (controller, url) {
             print('LOADED INITIAL SCRIPT');
-          webViewController.evaluateJavascript(source: '(() => {if (document.querySelector("div.chat_broadcast")) console.log("drochila228 startDrochila")})()');
-        },
+            webViewController.evaluateJavascript(source: '(() => {if (document.querySelector("div.chat_broadcast")) console.log("drochila228 startDrochila")})()');
+          },
+          onConsoleMessage: (controller, message) async{
+            final gotMessage = message.message;
+            print(message);
+            if(RegExp('drochila228 startDrochila', multiLine: true).hasMatch(gotMessage)){
+              print('LOADED INITIAL SCRIPT');
+              webViewController.evaluateJavascript(source: mess);
+            }
+            else if (RegExp('drochila228', multiLine: true).hasMatch(gotMessage)) {
+              var temp1 = gotMessage.split(' ');
+              print(temp1);
+              var url = temp1[1];
+              print(url);
+              temp1 = temp1.sublist(2);
+              print(temp1);
 
-        onConsoleMessage: (controller, message) async{
-          final gotMessage = message.message;
-          print(message);
-          if(RegExp('drochila228 startDrochila', multiLine: true).hasMatch(gotMessage)){
-            print('LOADED INITIAL SCRIPT');
-            webViewController.evaluateJavascript(source: mess);
-          }
-          else if (RegExp('drochila228', multiLine: true).hasMatch(gotMessage)) {
-            var temp1 = gotMessage.split(' ');
-            print(temp1);
-            var url = temp1[1];
-            print(url);
-            temp1 = temp1.sublist(2);
-            print(temp1);
+              final answer = await APIProvider().firstRequest(url, temp1.join(" "));
+              print('tetebg');
+              print(answer);
 
-            final answer = await APIProvider().firstRequest(url, temp1.join(" "));
-            print('tetebg');
-            print(answer);
+              var answer2 = answer.replaceAll('`', "'");
 
-            var answer2 = answer.replaceAll('`', "'");
-
-            webViewController.evaluateJavascript(
-            source: '(() => {document.getElementById("HOLDER_DIV").innerText = `$answer2`})()');
+              webViewController.evaluateJavascript(
+                  source: '(() => {document.getElementById("HOLDER_DIV").innerText = `$answer2`})()');
 
             }
-          }
+          },
+          gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+            Factory<VerticalDragGestureRecognizer>(
+                  () => VerticalDragGestureRecognizer()..onUpdate = _handleDragUpdate,
+            ),
+          },
+        ),
       ),
     );
   }

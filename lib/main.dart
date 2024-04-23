@@ -49,7 +49,7 @@ class MyApp extends StatelessWidget {
                                 builder: (context) => const FirstSitePage()));
                       });
                     },
-                    child: const Text("First site")),
+                    child: const Text("Chaturbate")),
                 ElevatedButton(
                     onPressed: () {
                       Navigator.push(
@@ -57,7 +57,7 @@ class MyApp extends StatelessWidget {
                           MaterialPageRoute(
                               builder: (context) => const ComingSoonPage()));
                     },
-                    child: const Text("Second site"))
+                    child: const Text("Stripchat"))
               ],
             ),
           ),

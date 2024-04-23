@@ -20,7 +20,7 @@ class ComingSoonPage extends StatelessWidget {
                   children: <TextSpan>[
                     TextSpan(
                         text: 'Coming soon',
-                        style: TextStyle(color: Colors.green, fontSize: 40)
+                        style: TextStyle(color: Colors.purpleAccent, fontSize: 40)
                     ),
                     TextSpan(
                       text: '⏱️', // emoji characters
